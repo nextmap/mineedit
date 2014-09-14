@@ -17,12 +17,7 @@
     <url>https://github.com/nidi3/mineedit</url>
     <inceptionYear>2014</inceptionYear>
 
-    <properties>
-        <project.build.compiler.version>1.7</project.build.compiler.version>
-    </properties>
-
     <build>
-
         <plugins>
             <plugin>
                 <groupId>org.scala-tools</groupId>
@@ -78,6 +73,7 @@
             <artifactId>logback-classic</artifactId>
             <version>1.1.2</version>
         </dependency>
+
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.11</artifactId>
