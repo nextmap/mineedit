@@ -1,10 +1,7 @@
 package guru.nidi.minecraft.mineedit
 
-import java.io.File
-import java.nio.file.Files
+import java.io.{File, RandomAccessFile}
 import java.util.zip.Inflater
-
-import guru.nidi.minecraft.mineedit.Util.{readByte, readInt}
 
 
 /**
@@ -28,27 +25,34 @@ object WorldLoader {
   }
 
   private def loadRegion(file: File): Region = {
-    val data = Files.readAllBytes(file.toPath)
+    val in = new RandomAccessFile(file, "r")
     val chunks = new Array[Chunk](1024)
     for (i <- 0 until 1024) {
-      val timestamp = readInt(data, i * 8)
-      val pos = (readInt(data, i * 4) >> 8) * 4096
+      in.seek(i * 4)
+      val pos = (in.readInt() >> 8) << 12
+      in.seek(4096 + i * 4)
+      val timestamp = in.readInt()
       if (timestamp != 0 && pos != 0) {
-        chunks(i) = new Chunk(timestamp, readData(data, pos))
+        in.seek(pos)
+        chunks(i) = new Chunk(timestamp, readData(in))
       }
     }
+    in.close()
     new Region(chunks)
   }
 
 
-  private def readData(data: Array[Byte], pos: Int): Array[Byte] = {
-    val len = readInt(data, pos)
-    val compression = readByte(data, pos + 4)
+  private def readData(in: RandomAccessFile): Array[Byte] = {
+    val len = in.readInt()
+    val compression = in.readByte()
     if (compression != 2) throw new IllegalArgumentException("Only compression mode 2 is supported")
     val inflater = new Inflater()
-    inflater.setInput(data, pos + 5, len)
+    val sourceData = new Array[Byte](len - 1)
+    in.read(sourceData)
+    inflater.setInput(sourceData)
     val raw = new Array[Byte](1000000)
     val size = inflater.inflate(raw)
+    inflater.end()
     if (size == raw.length) throw new RuntimeException("too small raw buffer")
     val res = new Array[Byte](size)
     System.arraycopy(raw, 0, res, 0, size)

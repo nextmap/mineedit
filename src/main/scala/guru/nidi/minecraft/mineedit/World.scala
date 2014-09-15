@@ -22,6 +22,9 @@ class World(val regions: Map[XZ, Region]) {
       case Some(r) => r.setBlock(floorMod(x, 512), y, floorMod(z, 512), b)
     }
   }
+
+  override def equals(obj: scala.Any): Boolean =
+    obj.isInstanceOf[World] && obj.asInstanceOf[World].regions == regions
 }
 
 object World {
@@ -30,7 +33,7 @@ object World {
 
 case class XZ(x: Int, z: Int)
 
-class Region(chunks: Array[Chunk]) {
+class Region(val chunks: Array[Chunk]) {
 
 
   //  for (x1 <- 0 until 32)
@@ -58,11 +61,13 @@ class Region(chunks: Array[Chunk]) {
       case Some(c) => c.setBlock(floorMod(x, 16), y, floorMod(z, 16), b)
     }
   }
+
+  override def equals(obj: scala.Any): Boolean =
+    obj.isInstanceOf[Region] && obj.asInstanceOf[Region].chunks.sameElements(chunks)
 }
 
-class Chunk(val timestamp: Int, data: Array[Byte]) {
+class Chunk(val timestamp: Int, val data: Array[Byte]) {
   val nbt = NbtParser.parse(data).asInstanceOf[CompoundTag]
-  println(nbt)
 
   def root: CompoundTag = nbt[CompoundTag]("Level")
 
@@ -107,6 +112,14 @@ class Chunk(val timestamp: Int, data: Array[Byte]) {
 
 
   def blockPos(x: Int, y: Int, z: Int): Int = x + (y % 16) * 16 * 16 + z * 16
+
+
+  override def equals(obj: scala.Any): Boolean =
+    if (!obj.isInstanceOf[Chunk]) false
+    else {
+      val that = obj.asInstanceOf[Chunk]
+      that.timestamp == timestamp && that.nbt == nbt
+    }
 
   override def toString: String = s"Chunk at ($xPos,$zPos)"
 }

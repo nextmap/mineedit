@@ -1,10 +1,7 @@
 package guru.nidi.minecraft.mineedit
 
-import java.io.File
-import java.nio.file.Files
-import java.util.zip.Inflater
-
-import guru.nidi.minecraft.mineedit.Util.{readByte, readInt}
+import java.io.{File, RandomAccessFile}
+import java.util.zip.Deflater
 
 
 /**
@@ -12,42 +9,52 @@ import guru.nidi.minecraft.mineedit.Util.{readByte, readInt}
  */
 object WorldSaver {
   def save(dir: File, world: World): Unit = {
-    world.regions.foreach(r => saveRegion(r._1, r._2))
+    world.regions.foreach(r => saveRegion(new File(dir, "region/" + filenameOf(r._1)), r._2))
   }
 
-  private def saveRegion(position: XZ, region: Region): Unit = {
+  private def saveRegion(file: File, region: Region): Unit = {
+    file.getParentFile.mkdirs()
+    val out = new RandomAccessFile(file, "rw")
 
+    def writeHeader(i: Int, pos: Int, timestamp: Int) = {
+      out.seek(i * 4)
+      out.writeInt(pos)
+      out.seek(4096 + i * 4)
+      out.writeInt(timestamp)
+    }
+
+    var pos = 8192
+    for (i <- 0 until 1024) {
+      val chunk = region.chunks(i)
+      if (chunk != null) {
+        out.seek(pos)
+        val size = writeData(out, chunk.data)
+        writeHeader(i, (pos >> 12 << 8) + (size >> 12), chunk.timestamp)
+        pos += size
+      } else {
+        writeHeader(i, 0, 0)
+      }
+    }
+    out.close()
   }
 
   private def filenameOf(position: XZ): String = {
     s"r.${position.x}.${position.z}.mca"
   }
 
-  private def loadRegion(file: File): Region = {
-    val data = Files.readAllBytes(file.toPath)
-    val chunks = new Array[Chunk](1024)
-    for (i <- 0 until 1024) {
-      val timestamp = readInt(data, i * 8)
-      val pos = (readInt(data, i * 4) >> 8) * 4096
-      if (timestamp != 0 && pos != 0) {
-        chunks(i) = new Chunk(timestamp, readData(data, pos))
-      }
-    }
-    new Region(chunks)
-  }
-
-
-  private def readData(data: Array[Byte], pos: Int): Array[Byte] = {
-    val len = readInt(data, pos)
-    val compression = readByte(data, pos + 4)
-    if (compression != 2) throw new IllegalArgumentException("Only compression mode 2 is supported")
-    val inflater = new Inflater()
-    inflater.setInput(data, pos + 5, len)
+  private def writeData(out: RandomAccessFile, data: Array[Byte]): Int = {
+    val deflater = new Deflater()
+    deflater.setInput(data)
+    deflater.finish()
     val raw = new Array[Byte](1000000)
-    val size = inflater.inflate(raw)
-    if (size == raw.length) throw new RuntimeException("too small raw buffer")
-    val res = new Array[Byte](size)
-    System.arraycopy(raw, 0, res, 0, size)
-    res
+    val size = deflater.deflate(raw)
+    deflater.end()
+    val mod = size % 4096
+    val blockSize = if (mod == 0) size else size + 4096 - mod
+    if (blockSize >= raw.length) throw new RuntimeException("too small raw buffer")
+    out.writeInt(size + 1)
+    out.writeByte(2)
+    out.write(raw, 0, blockSize)
+    blockSize
   }
 }
