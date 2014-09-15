@@ -2,6 +2,8 @@ package guru.nidi.minecraft.mineedit
 
 import java.nio.charset.Charset
 
+import guru.nidi.minecraft.mineedit.Util._
+
 import scala.collection.mutable
 
 /**
@@ -9,8 +11,8 @@ import scala.collection.mutable
  */
 object NbtParser {
   def parse(data: Array[Byte]): Tag = {
-    val nullSafeData = if (data == null) Array[Byte](0) else data
-    new NbtParser(nullSafeData).parseTag()
+    if (data == null) null
+    else new NbtParser(data).parseTag()
   }
 }
 
@@ -19,32 +21,32 @@ private class NbtParser(data: Array[Byte]) {
 
   def parseByte(): Byte = {
     pos += 1
-    Util.readByte(data, pos - 1)
+    readByte(data, pos - 1)
   }
 
   def parseShort(): Short = {
     pos += 2
-    Util.readShort(data, pos - 2)
+    readShort(data, pos - 2)
   }
 
   def parseInt(): Int = {
     pos += 4
-    Util.readInt(data, pos - 4)
+    readInt(data, pos - 4)
   }
 
   def parseLong(): Long = {
     pos += 8
-    Util.readLong(data, pos - 8)
+    readLong(data, pos - 8)
   }
 
   def parseFloat(): Float = {
     pos += 4
-    Util.readFloat(data, pos - 4)
+    readFloat(data, pos - 4)
   }
 
   def parseDouble(): Double = {
     pos += 8
-    Util.readDouble(data, pos - 8)
+    readDouble(data, pos - 8)
   }
 
   def parseByteArray(): Array[Byte] = {
@@ -71,11 +73,11 @@ private class NbtParser(data: Array[Byte]) {
     new String(data, pos - len, len, Charset.forName("utf-8"))
   }
 
-  def parseCompound(): Seq[Tag] = {
-    val res = mutable.Buffer[Tag]()
+  def parseCompound(): collection.Map[String, Tag] = {
+    val res = mutable.Map[String, Tag]()
     var tag = parseTag()
     while (!tag.isInstanceOf[EndTag]) {
-      res += tag
+      res.put(tag.name, tag)
       tag = parseTag()
     }
     res
@@ -115,10 +117,23 @@ private class NbtParser(data: Array[Byte]) {
   }
 }
 
+object Tag {
+  implicit def intTag2Int(tag: IntTag): Int = tag.value
 
-class Tag {}
+  implicit def byteTag2Int(tag: ByteTag): Byte = tag.value
+
+  implicit def byteArrayTag2Array(tag: ByteArrayTag): Array[Byte] = tag.value
+
+  implicit def listTag2Seq[T <: Tag](tag: ListTag[T]): Seq[T] = tag.value
+}
+
+abstract class Tag() {
+  def name: String
+}
 
 case class EndTag() extends Tag {
+  val name = ""
+
   override def toString: String = "|"
 }
 
@@ -158,8 +173,12 @@ case class ListTag[T <: Tag](name: String, value: Seq[T]) extends Tag {
   override def toString: String = name + "=[" + value.mkString(",") + "]"
 }
 
-case class CompoundTag(name: String, value: Seq[Tag]) extends Tag {
-  override def toString: String = name + "={" + value.mkString(",") + "}"
+case class CompoundTag(name: String, value: collection.Map[String, Tag]) extends Tag {
+  def get(name: String): Option[Tag] = value.get(name)
+
+  def apply[T <: Tag](name: String): T = get(name).get.asInstanceOf[T]
+
+  override def toString: String = name + "={" + value.values.mkString(",") + "}"
 }
 
 case class IntArrayTag(name: String, value: Array[Int]) extends Tag {

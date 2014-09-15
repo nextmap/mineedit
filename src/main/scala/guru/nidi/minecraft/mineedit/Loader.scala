@@ -4,6 +4,8 @@ import java.io.File
 import java.nio.file.Files
 import java.util.zip.Inflater
 
+import guru.nidi.minecraft.mineedit.Util.{readByte, readInt}
+
 
 /**
  *
@@ -29,18 +31,19 @@ object Loader {
     val data = Files.readAllBytes(file.toPath)
     val chunks = new Array[Chunk](1024)
     for (i <- 0 until 1024) {
-      chunks(i) = new Chunk(
-        Util.readInt(data, i * 8),
-        readData(data, (Util.readInt(data, i * 4) >> 8) * 4096))
+      val timestamp = readInt(data, i * 8)
+      val pos = (readInt(data, i * 4) >> 8) * 4096
+      if (timestamp != 0 && pos != 0) {
+        chunks(i) = new Chunk(timestamp, readData(data, pos))
+      }
     }
     new Region(chunks)
   }
 
 
   private def readData(data: Array[Byte], pos: Int): Array[Byte] = {
-    if (pos == 0) return null
-    val len = Util.readInt(data, pos)
-    val compression = Util.readByte(data,pos + 4)
+    val len = readInt(data, pos)
+    val compression = readByte(data, pos + 4)
     if (compression != 2) throw new IllegalArgumentException("Only compression mode 2 is supported")
     val inflater = new Inflater()
     inflater.setInput(data, pos + 5, len)
