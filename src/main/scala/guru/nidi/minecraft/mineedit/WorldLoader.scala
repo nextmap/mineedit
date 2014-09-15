@@ -10,7 +10,7 @@ import guru.nidi.minecraft.mineedit.Util.{readByte, readInt}
 /**
  *
  */
-object Loader {
+object WorldLoader {
   def load(dir: File): World = {
     new World(
       new File(dir, "region").listFiles()

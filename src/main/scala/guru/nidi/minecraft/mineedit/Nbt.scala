@@ -83,7 +83,7 @@ private class NbtParser(data: Array[Byte]) {
     res
   }
 
-  def parseList[T <: Tag](): Seq[T] = {
+  def parseList[T <: Tag](): mutable.Buffer[T] = {
     val res = mutable.Buffer[T]()
     val id = parseByte()
     val len = parseInt()
@@ -106,7 +106,7 @@ private class NbtParser(data: Array[Byte]) {
       case 9 => ListTag(name, parseList())
       case 10 => CompoundTag(name, parseCompound())
       case 11 => IntArrayTag(name, parseIntArray())
-      case other => throw new IllegalArgumentException("unknown tag id " + other)
+      case other => throw new IllegalArgumentException(s"unknown tag id $other")
     }
   }
 
@@ -138,39 +138,46 @@ case class EndTag() extends Tag {
 }
 
 case class ByteTag(name: String, value: Byte) extends Tag {
-  override def toString: String = name + "=" + value + "B"
+  override def toString: String = s"$name=${value}B"
 }
 
 case class ShortTag(name: String, value: Short) extends Tag {
-  override def toString: String = name + "=" + value + "S"
+  override def toString: String = s"$name=${value}S"
 }
 
 case class IntTag(name: String, value: Int) extends Tag {
-  override def toString: String = name + "=" + value
+  override def toString: String = s"$name=$value"
 }
 
 case class LongTag(name: String, value: Long) extends Tag {
-  override def toString: String = name + "=" + value + "L"
+  override def toString: String = s"$name=${value}L"
 }
 
 case class FloatTag(name: String, value: Float) extends Tag {
-  override def toString: String = name + "=" + value + "F"
+  override def toString: String = s"$name=${value}F"
 }
 
 case class DoubleTag(name: String, value: Double) extends Tag {
-  override def toString: String = name + "=" + value + "D"
+  override def toString: String = s"$name=${value}D"
 }
 
 case class ByteArrayTag(name: String, value: Array[Byte]) extends Tag {
-  override def toString: String = name + "=[B...]"
+  def set(pos: Int, value: Int) = this.value(pos) = value.toByte
+
+  override def toString: String = s"$name=[${value.length} B]"
 }
 
 case class StringTag(name: String, value: String) extends Tag {
-  override def toString: String = name + "='" + value + "'"
+  override def toString: String = s"$name='$value'"
 }
 
-case class ListTag[T <: Tag](name: String, value: Seq[T]) extends Tag {
-  override def toString: String = name + "=[" + value.mkString(",") + "]"
+case class ListTag[T <: Tag](name: String, value: mutable.Buffer[T]) extends Tag {
+  def add(tag: T): Unit = value += tag
+
+  override def toString: String = {
+    val values = value.mkString(",")
+    s"$name=[$values]"
+  }
 }
 
 case class CompoundTag(name: String, value: collection.Map[String, Tag]) extends Tag {
@@ -178,10 +185,13 @@ case class CompoundTag(name: String, value: collection.Map[String, Tag]) extends
 
   def apply[T <: Tag](name: String): T = get(name).get.asInstanceOf[T]
 
-  override def toString: String = name + "={" + value.values.mkString(",") + "}"
+  override def toString: String = {
+    val values = value.values.mkString(",")
+    s"$name={$values}"
+  }
 }
 
 case class IntArrayTag(name: String, value: Array[Int]) extends Tag {
-  override def toString: String = name + "=[I...]"
+  override def toString: String = s"$name=[${value.length} I]"
 }
 
