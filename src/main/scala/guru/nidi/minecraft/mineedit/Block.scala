@@ -88,6 +88,113 @@ object Block {
   val SPRUCE_WOOD_BARK = Wood(13)
   val BIRCH_WOOD_BARK = Wood(14)
   val JUNGLE_WOOD_BARK = Wood(15)
+  val OAK_LEAVES = Leaves(0)
+  val SPRUCE_LEAVES = Leaves(1)
+  val BIRCH_LEAVES = Leaves(2)
+  val JUNGLE_LEAVES = Leaves(3)
+  val OAK_LEAVES_NO_DECAY = Leaves(5)
+  val SPRUCE_LEAVES_NO_DECAY = Leaves(5)
+  val BIRCH_LEAVES_NO_DECAY = Leaves(6)
+  val JUNGLE_LEAVES_NO_DECAY = Leaves(7)
+  val OAK_LEAVES_CHECK_DECAY = Leaves(8)
+  val SPRUCE_LEAVES_CHECK_DECAY = Leaves(9)
+  val BIRCH_LEAVES_CHECK_DECAY = Leaves(10)
+  val JUNGLE_LEAVES_CHECK_DECAY = Leaves(11)
+  val OAK_LEAVES_NO_AND_CHECK_DECAY = Leaves(12)
+  val SPRUCE_LEAVES_NO_AND_CHECK_DECAY = Leaves(13)
+  val BIRCH_LEAVES_NO_AND_CHECK_DECAY = Leaves(14)
+  val JUNGLE_LEAVES_NO_AND_CHECK_DECAY = Leaves(15)
+  val SPONGE = Sponge(0)
+  val WET_SPONGE = Sponge(1)
+  val GLASS = Glass()
+  val LAPIS_ORE = LapisOre()
+  val LAPIS_BLOCK = LapisBlock()
+
+  val SANDSTONE = Sandstone(0)
+  val CHISELED_SANDSTONE = Sandstone(1)
+  val SMOOTH_SANDSTONE = Sandstone(2)
+
+  val WEB = Web()
+
+  val SHRUB = Tallgrass(0)
+  val TALLGRASS = Tallgrass(1)
+  val FERN = Tallgrass(2)
+  val DEADBUSH = Deadbush()
+
+  val YELLOW_FLOWER = YellowFlower()
+  val BROWN_MUSHROOM = BrownMushroom()
+  val RED_MUSHROOM = RedMushroom()
+
+  val GOLD_BLOCK = GoldBlock()
+  val IRON_BLOCK = IronBlock()
+
+  val BRICKS_BLOCK = BrickBlock()
+  val TNT = Tnt()
+  val BOOKSHELF = Bookshelf()
+  val MOSSY_COBBLESTONE = MossyCobblestone()
+  val OBSIDIAN = Obsidian()
+
+  val DIAMOND_ORE = DiamondOre()
+  val DIAMOND_BLOCK = DiamondBlock()
+  val CRAFTING_TABLE = CraftingTable()
+
+  val REDSTONE_ORE = RedstoneOre()
+  val LIT_REDSTONE_ORE = LitRedstoneOre()
+
+  val ICE = Ice()
+  val SNOW = Snow()
+
+  val CLAY = Clay()
+
+  val FENCE = Fence()
+
+  val NETHERRACK = Netherrack()
+  val SOUL_SAND = SoulSand()
+  val GLOWSTONE = Glowstone()
+  val PORTAL = Portal()
+
+  val IRON_BARS = IronBars()
+  val GLASS_PANE = GlassPane()
+  val MELON_BLOCK = MelonBlock()
+
+  val MYCELIUM = Mycelium()
+  val WATERLILY = Waterlily()
+  val NEATHER_BRICK = NetherBrick()
+  val NEATHER_BRICK_FENCE = NetherBrickFence()
+
+  val END_STONE = EndStone()
+  val DRAGON_EGG = DragonEgg()
+  val REDSTONE_LAMP = RedstoneLamp()
+  val LIT_REDSTONE_LAMP = LitRedstoneLamp()
+
+  val EMERALD_ORE = EmeraldOre()
+
+  val EMERALD_BLOCK = EmeraldBlock()
+
+  val REDSTONE_BLOCK = RedstoneBlock()
+  val QUARTZ_ORE = QuartzOre()
+
+  val SLIME = Slime()
+  val BARRIER = Barrier()
+
+
+  val SEA_LANTERN = SeaLantern()
+
+  val HARDENED_CLAY = HardenedClay()
+  val COAL_BLOCK = CoalBlock()
+  val PACKED_ICE = PackedIce()
+
+  val SPRUCE_FENCE_GATE = SpruceFenceGate()
+  val BIRCH_FENCE_GATE = BirchFenceGate()
+  val JUNGLE_FENCE_GATE = JungleFenceGate()
+  val DARK_OAK_FENCE_GATE = DarkOakFenceGate()
+  val ACACIA_FENCE_GATE = AcaciaFenceGate()
+  val SPRUCE_FENCE = SpruceFence()
+  val BIRCH_FENCE = BirchFence()
+  val JUNGLE_FENCE = JungleFence()
+  val DARK_OAK_FENCE = DarkOakFence()
+  val ACACIA_FENCE = AcaciaFence()
+
 
   def hash(id: Int, data: Int) = (id << 16) + data
 
@@ -136,9 +243,9 @@ case class CoalOre() extends Block(16)
 
 case class Wood(override val data: Int) extends Block(17, data)
 
-case class Leaves() extends Block(18)
+case class Leaves(override val data: Int) extends Block(18, data)
 
-case class Sponge() extends Block(19)
+case class Sponge(override val data: Int) extends Block(19, data)
 
 case class Glass() extends Block(20)
 
@@ -148,7 +255,7 @@ case class LapisBlock() extends Block(22)
 
 case class Dispenser() extends Block(23)
 
-case class Sandstone() extends Block(24)
+case class Sandstone(override val data: Int) extends Block(24, data)
 
 case class Noteblock() extends Block(25)
 
@@ -162,7 +269,7 @@ case class StickyPiston() extends Block(29)
 
 case class Web() extends Block(30)
 
-case class Tallgrass() extends Block(31)
+case class Tallgrass(override val data: Int) extends Block(31, data)
 
 case class Deadbush() extends Block(32)
 
@@ -258,33 +365,33 @@ case class StoneButton() extends Block(77)
 
 case class SnowLayer() extends Block(78)
 
-case class ice() extends Block(79)
+case class Ice() extends Block(79)
 
-case class snow() extends Block(80)
+case class Snow() extends Block(80)
 
-case class cactus() extends Block(81)
+case class Cactus() extends Block(81)
 
-case class clay() extends Block(82)
+case class Clay() extends Block(82)
 
-case class reeds() extends Block(83)
+case class Reeds() extends Block(83)
 
-case class jukebox() extends Block(84)
+case class Jukebox() extends Block(84)
 
-case class fence() extends Block(85)
+case class Fence() extends Block(85)
 
-case class pumpkin() extends Block(86)
+case class Pumpkin() extends Block(86)
 
-case class netherrack() extends Block(87)
+case class Netherrack() extends Block(87)
 
 case class SoulSand() extends Block(88)
 
-case class glowstone() extends Block(89)
+case class Glowstone() extends Block(89)
 
-case class portal() extends Block(90)
+case class Portal() extends Block(90)
 
 case class LitPumpkin() extends Block(91)
 
-case class cake() extends Block(92)
+case class Cake() extends Block(92)
 
 case class UnpoweredRepeater() extends Block(93)
 
@@ -292,11 +399,11 @@ case class PoweredRepeater() extends Block(94)
 
 case class StainedGlass() extends Block(95)
 
-case class trapdoor() extends Block(96)
+case class Trapdoor() extends Block(96)
 
 case class MonsterEgg() extends Block(97)
 
-case class stonebrick() extends Block(98)
+case class Stonebrick() extends Block(98)
 
 case class BrownMushroomBlock() extends Block(99)
 
@@ -312,7 +419,7 @@ case class PumpkinStem() extends Block(104)
 
 case class MelonStem() extends Block(105)
 
-case class vine() extends Block(106)
+case class Vine() extends Block(106)
 
 case class FenceGate() extends Block(107)
 
@@ -320,9 +427,9 @@ case class BrickStairs() extends Block(108)
 
 case class StoneBrickStairs() extends Block(109)
 
-case class mycelium() extends Block(110)
+case class Mycelium() extends Block(110)
 
-case class waterlily() extends Block(111)
+case class Waterlily() extends Block(111)
 
 case class NetherBrick() extends Block(112)
 
@@ -336,7 +443,7 @@ case class EnchantingTable() extends Block(116)
 
 case class BrewingStand() extends Block(117)
 
-case class cauldron() extends Block(118)
+case class Cauldron() extends Block(118)
 
 case class EndPortal() extends Block(119)
 
@@ -354,7 +461,7 @@ case class DoubleWoodenSlab() extends Block(125)
 
 case class WoodenSlab() extends Block(126)
 
-case class cocoa() extends Block(127)
+case class Cocoa() extends Block(127)
 
 case class SandstoneStairs() extends Block(128)
 
@@ -364,7 +471,7 @@ case class EnderChest() extends Block(130)
 
 case class TripwireHook() extends Block(131)
 
-case class tripwire() extends Block(132)
+case class Tripwire() extends Block(132)
 
 case class EmeraldBlock() extends Block(133)
 
@@ -376,21 +483,21 @@ case class JungleStairs() extends Block(136)
 
 case class CommandBlock() extends Block(137)
 
-case class beacon() extends Block(138)
+case class Beacon() extends Block(138)
 
 case class CobblestoneWall() extends Block(139)
 
 case class FlowerPot() extends Block(140)
 
-case class carrots() extends Block(141)
+case class Carrots() extends Block(141)
 
-case class potatoes() extends Block(142)
+case class Potatoes() extends Block(142)
 
 case class WoodenButton() extends Block(143)
 
-case class skull() extends Block(144)
+case class Skull() extends Block(144)
 
-case class anvil() extends Block(145)
+case class Anvil() extends Block(145)
 
 case class TrappedChest() extends Block(146)
 
@@ -402,13 +509,13 @@ case class UnpoweredComparator() extends Block(149)
 
 case class PoweredComparator() extends Block(150)
 
-case class daylight_detector() extends Block(151)
+case class DaylightDetector() extends Block(151)
 
-case class redstone_block() extends Block(152)
+case class RedstoneBlock() extends Block(152)
 
 case class QuartzOre() extends Block(153)
 
-case class hopper() extends Block(154)
+case class Hopper() extends Block(154)
 
 case class QuartzBlock() extends Block(155)
 
@@ -416,33 +523,33 @@ case class QuartzStairs() extends Block(156)
 
 case class ActivatorRail() extends Block(157)
 
-case class dropper() extends Block(158)
+case class Dropper() extends Block(158)
 
-case class stained_hardened_clay() extends Block(159)
+case class StainedHardenedClay() extends Block(159)
 
-case class stained_glass_pane() extends Block(160)
+case class StainedGlassPane() extends Block(160)
 
-case class leaves2() extends Block(161)
+case class Leaves2() extends Block(161)
 
-case class log2() extends Block(162)
+case class Log2() extends Block(162)
 
-case class acacia_stairs() extends Block(163)
+case class AcaciaStairs() extends Block(163)
 
-case class dark_oak_stairs() extends Block(164)
+case class DarkOakStairs() extends Block(164)
 
-case class slime() extends Block(165)
+case class Slime() extends Block(165)
 
-case class barrier() extends Block(166)
+case class Barrier() extends Block(166)
 
 case class IronTrapdoor() extends Block(167)
 
-case class prismarine() extends Block(168)
+case class Prismarine() extends Block(168)
 
 case class SeaLantern() extends Block(169)
 
 case class HayBlock() extends Block(170)
 
-case class carpet() extends Block(171)
+case class Carpet() extends Block(171)
 
 case class HardenedClay() extends Block(172)
 
