@@ -8,8 +8,8 @@ import org.scalatest.FlatSpec
  *
  */
 class WorldLoaderTest extends FlatSpec {
-//  val world = WorldLoader.load(new File("src/test/resources"))
-  val world = WorldLoader.load(new File("target/testout"))
+  val world = WorldLoader.load(new File("src/test/resources"))
+//  val world = WorldLoader.load(new File("target/testout"))
 
   behavior of "Loader"
 
@@ -18,9 +18,9 @@ class WorldLoaderTest extends FlatSpec {
 
   it should "support getBlock for stones" in {
     assert(world.getBlock(10, 4, 10) === STONE)
-//    assert(world.getBlock(11, 4, 10) === GRANITE)
-//    assert(world.getBlock(12, 4, 10) === DIORITE)
-//    assert(world.getBlock(13, 4, 10) === ANDESITE)
+    assert(world.getBlock(11, 4, 10) === GRANITE)
+    assert(world.getBlock(12, 4, 10) === DIORITE)
+    assert(world.getBlock(13, 4, 10) === ANDESITE)
 
     assert(world.getBlock(-1, 4, 10) === STONE)
     assert(world.getBlock(-3, 4, 10) === STONE)
@@ -46,6 +46,5 @@ class WorldLoaderTest extends FlatSpec {
     assert(world.getBlock(-13, 4, -2) === LAVA_LEVEL4)
     assert(world.getBlock(-14, 4, -2) === LAVA_LEVEL2)
     assert(world.getBlock(-15, 4, -2) === AIR)
-
   }
 }

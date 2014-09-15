@@ -35,7 +35,6 @@ case class XZ(x: Int, z: Int)
 
 class Region(val chunks: Array[Chunk]) {
 
-
   //  for (x1 <- 0 until 32)
   //    for (y1 <- 0 until 32)
   //      if (chunk(x1, y1).isDefined)

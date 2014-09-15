@@ -151,16 +151,6 @@ case class StringTag(name: String, value: String) extends Tag {
 case class ListTag[T <: Tag](name: String, value: mutable.Buffer[T]) extends Tag {
   def add(tag: T): Unit = value += tag
 
-  override def equals(obj: scala.Any): Boolean =
-    if (obj.getClass != getClass) false
-    else {
-      val that = obj.asInstanceOf[ListTag[T]]
-      val e=that.value.sameElements(value)
-      if (!e)
-        println(e)
-      that.name == name && e
-    }
-
   override def toString: String = {
     val values = value.mkString(",")
     s"$name=[$values]"

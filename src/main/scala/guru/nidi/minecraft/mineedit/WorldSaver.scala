@@ -9,7 +9,13 @@ import java.util.zip.Deflater
  */
 object WorldSaver {
   def save(dir: File, world: World): Unit = {
-    world.regions.foreach(r => saveRegion(new File(dir, "region/" + filenameOf(r._1)), r._2))
+    val regionDir = new File(dir, "region")
+
+    regionDir.listFiles()
+      .filter(_.getName.endsWith(".mca"))
+      .foreach(_.delete)
+
+    world.regions.foreach(r => saveRegion(new File(regionDir, filenameOf(r._1)), r._2))
   }
 
   private def saveRegion(file: File, region: Region): Unit = {
@@ -54,7 +60,7 @@ object WorldSaver {
     if (blockSize >= raw.length) throw new RuntimeException("too small raw buffer")
     out.writeInt(size + 1)
     out.writeByte(2)
-    out.write(raw, 0, blockSize)
+    out.write(raw, 0, blockSize - 5)
     blockSize
   }
 }
