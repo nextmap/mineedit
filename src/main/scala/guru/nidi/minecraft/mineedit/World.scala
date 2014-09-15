@@ -65,17 +65,17 @@ class Region(val chunks: Array[Chunk]) {
     obj.isInstanceOf[Region] && obj.asInstanceOf[Region].chunks.sameElements(chunks)
 }
 
-class Chunk(val timestamp: Int, val data: Array[Byte]) {
-  val nbt = NbtParser.parse(data).asInstanceOf[CompoundTag]
+class Chunk(val timestamp: Int, data: Array[Byte]) {
+  val root = NbtReader.read(data).asInstanceOf[CompoundTag]
 
-  def root: CompoundTag = nbt[CompoundTag]("Level")
+  def level: CompoundTag = root[CompoundTag]("Level")
 
-  def xPos: Int = root[IntTag]("xPos")
+  def xPos: Int = level[IntTag]("xPos")
 
-  def zPos: Int = root[IntTag]("zPos")
+  def zPos: Int = level[IntTag]("zPos")
 
   def sections(y: Int): Option[CompoundTag] =
-    root[ListTag[CompoundTag]]("Sections").find(ct => ct[ByteTag]("Y") - y == 0)
+    level[ListTag[CompoundTag]]("Sections").find(ct => ct[ByteTag]("Y") - y == 0)
 
   def getBlock(x: Int, y: Int, z: Int): Block = {
     sections(y / 16) match {
@@ -98,7 +98,7 @@ class Chunk(val timestamp: Int, val data: Array[Byte]) {
     val section: CompoundTag = sections(y / 16) match {
       case None =>
         val newSec = createSection
-        root[ListTag[CompoundTag]]("Sections").add(newSec)
+        level[ListTag[CompoundTag]]("Sections").add(newSec)
         newSec
       case Some(ct) => ct
     }
@@ -117,7 +117,7 @@ class Chunk(val timestamp: Int, val data: Array[Byte]) {
     if (!obj.isInstanceOf[Chunk]) false
     else {
       val that = obj.asInstanceOf[Chunk]
-      that.timestamp == timestamp && that.nbt == nbt
+      that.timestamp == timestamp && that.root == root
     }
 
   override def toString: String = s"Chunk at ($xPos,$zPos)"

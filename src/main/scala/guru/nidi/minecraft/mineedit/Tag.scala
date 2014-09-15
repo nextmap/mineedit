@@ -1,92 +1,10 @@
 package guru.nidi.minecraft.mineedit
 
-import java.io.{ByteArrayInputStream, DataInputStream}
-
 import scala.collection.mutable
 
 /**
  *
  */
-object NbtParser {
-  def parse(data: Array[Byte]): Tag = {
-    if (data == null) null
-    else new NbtParser(data).parseTag()
-  }
-}
-
-private class NbtParser(data: Array[Byte]) {
-  private val in = new DataInputStream(new ByteArrayInputStream(data))
-
-  def parseByteArray(): Array[Byte] = {
-    val len = in.readInt()
-    val value = new Array[Byte](len)
-    in.read(value)
-    value
-  }
-
-  def parseIntArray(): Array[Int] = {
-    val len = in.readInt()
-    val value = new Array[Int](len)
-    for (i <- 0 until len) {
-      value(i) = in.readInt()
-    }
-    value
-  }
-
-  def parseCompound(): collection.Map[String, Tag] = {
-    val res = mutable.Map[String, Tag]()
-    var tag = parseTag()
-    while (!tag.isInstanceOf[EndTag]) {
-      res.put(tag.name, tag)
-      tag = parseTag()
-    }
-    res
-  }
-
-  def parseList[T <: Tag](): mutable.Buffer[T] = {
-    val res = mutable.Buffer[T]()
-    val id = in.readByte()
-    val len = in.readInt()
-    for (i <- 0 until len) {
-      res += parseNamedTag(id, "").asInstanceOf[T]
-    }
-    res
-  }
-
-  def parseNamedTag(id: Byte, name: String): Tag = {
-    id match {
-      case 1 => ByteTag(name, in.readByte())
-      case 2 => ShortTag(name, in.readShort())
-      case 3 => IntTag(name, in.readInt())
-      case 4 => LongTag(name, in.readLong())
-      case 5 => FloatTag(name, in.readFloat())
-      case 6 => DoubleTag(name, in.readDouble())
-      case 7 => ByteArrayTag(name, parseByteArray())
-      case 8 => StringTag(name, in.readUTF())
-      case 9 => ListTag(name, parseList())
-      case 10 => CompoundTag(name, parseCompound())
-      case 11 => IntArrayTag(name, parseIntArray())
-      case other => throw new IllegalArgumentException(s"unknown tag id $other")
-    }
-  }
-
-  def parseTag(): Tag = {
-    val id = in.readByte()
-    if (id == 0) EndTag()
-    else parseNamedTag(id, in.readUTF())
-  }
-}
-
-object Tag {
-  implicit def intTag2Int(tag: IntTag): Int = tag.value
-
-  implicit def byteTag2Int(tag: ByteTag): Byte = tag.value
-
-  implicit def byteArrayTag2Array(tag: ByteArrayTag): Array[Byte] = tag.value
-
-  implicit def listTag2Seq[T <: Tag](tag: ListTag[T]): Seq[T] = tag.value
-}
-
 abstract class Tag() {
   def name: String
 
@@ -98,6 +16,16 @@ abstract class Tag() {
       val that = obj.asInstanceOf[Tag]
       that.name == name && that.value == value
     }
+}
+
+object Tag {
+  implicit def intTag2Int(tag: IntTag): Int = tag.value
+
+  implicit def byteTag2Int(tag: ByteTag): Byte = tag.value
+
+  implicit def byteArrayTag2Array(tag: ByteArrayTag): Array[Byte] = tag.value
+
+  implicit def listTag2Seq[T <: Tag](tag: ListTag[T]): Seq[T] = tag.value
 }
 
 case class EndTag() extends Tag {
@@ -148,7 +76,7 @@ case class StringTag(name: String, value: String) extends Tag {
   override def toString: String = s"$name='$value'"
 }
 
-case class ListTag[T <: Tag](name: String, value: mutable.Buffer[T]) extends Tag {
+case class ListTag[T <: Tag](name: String, typeId: Byte, value: mutable.Buffer[T]) extends Tag {
   def add(tag: T): Unit = value += tag
 
   override def toString: String = {

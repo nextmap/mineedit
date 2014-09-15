@@ -7,7 +7,7 @@ import java.util.zip.Deflater
 /**
  *
  */
-object WorldSaver {
+object WorldWriter {
   def save(dir: File, world: World): Unit = {
     val regionDir = new File(dir, "region")
 
@@ -34,7 +34,7 @@ object WorldSaver {
       val chunk = region.chunks(i)
       if (chunk != null) {
         out.seek(pos)
-        val size = writeData(out, chunk.data)
+        val size = writeData(out, NbtWriter.write(chunk.root))
         writeHeader(i, (pos >> 12 << 8) + (size >> 12), chunk.timestamp)
         pos += size
       } else {

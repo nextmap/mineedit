@@ -1,14 +1,14 @@
 import java.io.File
 
 import guru.nidi.minecraft.mineedit.Block._
-import guru.nidi.minecraft.mineedit.{Block, WorldLoader}
+import guru.nidi.minecraft.mineedit.{Block, WorldReader}
 import org.scalatest.FlatSpec
 
 /**
  *
  */
-class WorldLoaderTest extends FlatSpec {
-  val world = WorldLoader.load(new File("src/test/resources"))
+class WorldReaderTest extends FlatSpec {
+  val world = WorldReader.load(new File("src/test/resources"))
 //  val world = WorldLoader.load(new File("target/testout"))
 
   behavior of "Loader"

@@ -7,7 +7,7 @@ import java.util.zip.Inflater
 /**
  *
  */
-object WorldLoader {
+object WorldReader {
   def load(dir: File): World = {
     new World(
       new File(dir, "region").listFiles()
