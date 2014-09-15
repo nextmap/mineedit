@@ -1,6 +1,6 @@
 import java.io.File
 
-import guru.nidi.minecraft.mineedit.{WorldReader, WorldWriter}
+import guru.nidi.minecraft.mineedit.{Block, WorldReader, WorldWriter}
 import org.scalatest.FlatSpec
 
 /**
@@ -13,9 +13,9 @@ class WorldWriterTest extends FlatSpec {
 
   it should "save the example regions" in {
     val dir = new File("target/testout")
+    world.setBlock(0, 16, 0, Block.BIRCH_WOOD_UP_DOWN)
     WorldWriter.save(dir, world)
     val saved = WorldReader.load(dir)
     assert(saved === world)
-    println("W")
   }
 }

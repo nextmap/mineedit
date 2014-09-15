@@ -90,9 +90,11 @@ class Chunk(val timestamp: Int, data: Array[Byte]) {
 
   def setBlock(x: Int, y: Int, z: Int, b: Block): Unit = {
     def createSection = CompoundTag("", Map(
-      "Y" -> ByteTag("Y", (y % 16).toByte),
+      "Y" -> ByteTag("Y", (y / 16).toByte),
       "Blocks" -> ByteArrayTag("Blocks", new Array[Byte](4096)),
-      "Data" -> ByteArrayTag("Data", new Array[Byte](2048))
+      "Data" -> ByteArrayTag("Data", new Array[Byte](2048)),
+      "BlockLight" -> ByteArrayTag("BlockLight", new Array[Byte](2048)),
+      "SkyLight" -> ByteArrayTag("SkyLight", new Array[Byte](2048))
     ))
 
     val section: CompoundTag = sections(y / 16) match {
