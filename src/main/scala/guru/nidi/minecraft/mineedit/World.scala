@@ -94,7 +94,7 @@ class Chunk(val timestamp: Int, data: Array[Byte]) {
       "Blocks" -> ByteArrayTag("Blocks", new Array[Byte](4096)),
       "Data" -> ByteArrayTag("Data", new Array[Byte](2048)),
       "BlockLight" -> ByteArrayTag("BlockLight", new Array[Byte](2048)),
-      "SkyLight" -> ByteArrayTag("SkyLight", new Array[Byte](2048))
+      "SkyLight" -> ByteArrayTag("SkyLight", Array.fill[Byte](2048)(136.toByte))
     ))
 
     val section: CompoundTag = sections(y / 16) match {

@@ -142,7 +142,7 @@ object Block {
   val LIT_REDSTONE_ORE = LitRedstoneOre()
 
   val ICE = Ice()
-  val SNOW = Snow()
+  val SNOW = Snow(0)
 
   val CLAY = Clay()
 
@@ -367,7 +367,7 @@ case class SnowLayer() extends Block(78)
 
 case class Ice() extends Block(79)
 
-case class Snow() extends Block(80)
+case class Snow(override val data: Int) extends Block(80, data)
 
 case class Cactus() extends Block(81)
 

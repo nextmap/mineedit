@@ -1,7 +1,8 @@
+package guru.nidi.minecraft.mineedit
+
 import java.io.File
 
 import guru.nidi.minecraft.mineedit.Block._
-import guru.nidi.minecraft.mineedit.{Block, WorldReader}
 import org.scalatest.FlatSpec
 
 /**
