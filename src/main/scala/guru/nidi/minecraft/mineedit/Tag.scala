@@ -76,6 +76,7 @@ case class StringTag(name: String, value: String) extends Tag {
   override def toString: String = s"$name='$value'"
 }
 
+//TODO typeId should be type save
 case class ListTag[T <: Tag](name: String, typeId: Byte, value: mutable.Buffer[T]) extends Tag {
   def add(tag: T): Unit = value += tag
 
@@ -86,6 +87,9 @@ case class ListTag[T <: Tag](name: String, typeId: Byte, value: mutable.Buffer[T
 }
 
 case class CompoundTag(name: String, value: collection.Map[String, Tag]) extends Tag {
+  def this(name: String, tags: Tag*) =
+    this(name, tags.map(tag => (tag.name, tag)).toMap)
+
   def get(name: String): Option[Tag] = value.get(name)
 
   def apply[T <: Tag](name: String): T = get(name).get.asInstanceOf[T]

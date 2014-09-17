@@ -13,9 +13,16 @@ class WorldWriterTest extends FlatSpec {
 
   behavior of "Saver"
 
+  it should "create a new section if needed" in {
+    world.setBlock(0, 16, 0, Block.BIRCH_WOOD_UP_DOWN)
+  }
+
+  it should "create a new chunk if needed" in {
+    world.setBlock(351, 4, 161, Block.BIRCH_WOOD_UP_DOWN)
+  }
+
   it should "save the example regions" in {
     val dir = new File("target/testout")
-    world.setBlock(0, 16, 0, Block.BIRCH_WOOD_UP_DOWN)
 
     val tiff = GeoTiffReader.read(new File("/Users/nidi/Downloads/ASTGTM2_N46E008/ASTGTM2_N46E008_dem.tif"))
     for (x <- 0 until 200)
@@ -34,4 +41,5 @@ class WorldWriterTest extends FlatSpec {
     val saved = WorldReader.load(dir)
     assert(saved === world)
   }
+
 }
