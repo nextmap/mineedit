@@ -12,15 +12,13 @@ object WorldReader {
     new World(
       new File(dir, "region").listFiles()
         .filter(_.getName.endsWith(".mca"))
-        .map(f => (positionOf(f.getName), loadRegion(f)))
-        .toMap
-    )
+        .map(f => loadRegion(f)))
   }
 
-  private def positionOf(filename: String): XZ = {
+  private def positionOf(filename: String): (Int, Int) = {
     val secondDot = filename.indexOf('.', 2)
     val thirdDot = filename.indexOf('.', secondDot + 1)
-    XZ(filename.substring(2, secondDot).toInt,
+    (filename.substring(2, secondDot).toInt,
       filename.substring(secondDot + 1, thirdDot).toInt)
   }
 
@@ -38,7 +36,8 @@ object WorldReader {
       }
     }
     in.close()
-    new Region(chunks)
+    val pos = positionOf(file.getName)
+    new Region(pos._1, pos._2, chunks)
   }
 
 

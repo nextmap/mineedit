@@ -8,42 +8,45 @@ import scala.collection.mutable
 /**
  *
  */
-class World(val regions: Map[XZ, Region]) {
-  def region(rx: Int, rz: Int): Option[Region] = regions.get(XZ(rx, rz))
+class World(initRegions: Array[Region]) {
+  val regions = mutable.Map(initRegions.map(r => (r.x, r.z) -> r): _*)
+
+  def getRegion(x: Int, z: Int): Option[Region] = regions.get(floorDiv(x, 512), floorDiv(z, 512))
+
+  def addRegion(r: Region) = {
+    regions.put((r.x, r.z), r)
+    r
+  }
 
   def getBlock(x: Int, y: Int, z: Int): Block = {
-    region(floorDiv(x, 512), floorDiv(z, 512)) match {
+    getRegion(x, z) match {
       case None => Air()
       case Some(r) => r.getBlock(floorMod(x, 512), y, floorMod(z, 512))
     }
   }
 
   def setBlock(x: Int, y: Int, z: Int, b: Block): Unit = {
-    region(floorDiv(x, 512), floorDiv(z, 512)) match {
-      case None => throw new IllegalStateException(s"No region at ($x,$y,$z)")
-      case Some(r) => r.setBlock(floorMod(x, 512), y, floorMod(z, 512), b)
-    }
+    (getRegion(x, z) match {
+      case None => addRegion(new Region(x, z))
+      case Some(r) => r
+    }).setBlock(floorMod(x, 512), y, floorMod(z, 512), b)
   }
 
   override def equals(obj: scala.Any): Boolean =
     obj.isInstanceOf[World] && obj.asInstanceOf[World].regions == regions
 }
 
-object World {
+class Region(val x: Int, val z: Int, val chunks: Array[Chunk]) {
+  def this(x: Int, z: Int) = this(floorDiv(x, 512), floorDiv(z, 512), new Array[Chunk](1024))
 
-}
-
-case class XZ(x: Int, z: Int)
-
-class Region(val chunks: Array[Chunk]) {
   def chunkPos(x: Int, z: Int) = floorDiv(x, 16) + floorDiv(z, 16) * 32
 
   def getChunk(x: Int, z: Int): Option[Chunk] = {
     Option(chunks(chunkPos(x, z)))
   }
 
-  def setChunk(x: Int, z: Int, c: Chunk): Chunk = {
-    chunks(chunkPos(x, z)) = c
+  def addChunk(c: Chunk): Chunk = {
+    chunks(floorMod(c.xPos, 32) + floorMod(c.zPos, 32) * 32) = c
     c
   }
 
@@ -56,13 +59,15 @@ class Region(val chunks: Array[Chunk]) {
 
   def setBlock(x: Int, y: Int, z: Int, b: Block): Unit = {
     (getChunk(x, z) match {
-      case None => setChunk(x, z, new Chunk(x, z))
+      case None => addChunk(new Chunk(x + this.x * 512, z + this.z * 512))
       case Some(c) => c
     }).setBlock(floorMod(x, 16), y, floorMod(z, 16), b)
   }
 
   override def equals(obj: scala.Any): Boolean =
     obj.isInstanceOf[Region] && obj.asInstanceOf[Region].chunks.sameElements(chunks)
+
+  override def toString: String = s"Region at ($x,$z)"
 }
 
 class Chunk(val timestamp: Int, val root: CompoundTag) {
@@ -74,12 +79,12 @@ class Chunk(val timestamp: Int, val root: CompoundTag) {
       ByteTag("V", 1),
       IntTag("xPos", floorDiv(x, 16)),
       IntTag("zPos", floorDiv(z, 16)),
-      LongTag("LastUpdate", 0),
-      ByteTag("LightPopulated", 0),
-      ByteTag("TerrainPopulated", 0),
-      LongTag("InhabitedTime", 0),
-      IntArrayTag("HeightMap", new Array[Int](256)),
-      ByteArrayTag("Biomes", new Array[Byte](256)),
+      LongTag("LastUpdate", 50000),
+      ByteTag("LightPopulated", 1),
+      ByteTag("TerrainPopulated", 1),
+      LongTag("InhabitedTime", 5400),
+      IntArrayTag("HeightMap", Array.fill[Int](256)(4)),
+      ByteArrayTag("Biomes", Array.fill[Byte](256)(1)),
       ListTag("Entities", 0, mutable.Buffer()),
       ListTag("TileEntities", 0, mutable.Buffer()),
       ListTag("Sections", 10, mutable.Buffer())
@@ -96,7 +101,7 @@ class Chunk(val timestamp: Int, val root: CompoundTag) {
   def getSection(y: Int): Option[Section] =
     sections.find(ct => ct[ByteTag]("Y") - y / 16 == 0).map(new Section(_))
 
-  def setSection(y: Int, s: Section): Section = {
+  def addSection(s: Section): Section = {
     sections.add(s.root)
     s
   }
@@ -110,7 +115,7 @@ class Chunk(val timestamp: Int, val root: CompoundTag) {
 
   def setBlock(x: Int, y: Int, z: Int, b: Block): Unit = {
     (getSection(y) match {
-      case None => setSection(y, new Section(y))
+      case None => addSection(new Section(y))
       case Some(s) => s
     }).setBlock(x, y, z, b)
   }
@@ -153,6 +158,6 @@ class Section(val root: CompoundTag) {
     datas.set(pos / 2, newData)
   }
 
-  def blockPos(x: Int, y: Int, z: Int): Int = x + (y % 16) * 16 * 16 + z * 16
+  def blockPos(x: Int, y: Int, z: Int): Int = x + 16 * (z + 16 * (y % 16))
 
 }

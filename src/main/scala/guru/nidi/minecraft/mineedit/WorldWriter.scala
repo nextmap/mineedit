@@ -15,7 +15,7 @@ object WorldWriter {
       .filter(_.getName.endsWith(".mca"))
       .foreach(_.delete)
 
-    world.regions.foreach(r => saveRegion(new File(regionDir, filenameOf(r._1)), r._2))
+    world.regions.values.foreach(r => saveRegion(new File(regionDir, filenameOf(r.x, r.z)), r))
   }
 
   private def saveRegion(file: File, region: Region): Unit = {
@@ -44,8 +44,8 @@ object WorldWriter {
     out.close()
   }
 
-  private def filenameOf(position: XZ): String = {
-    s"r.${position.x}.${position.z}.mca"
+  private def filenameOf(x: Int, z: Int): String = {
+    s"r.$x.$z.mca"
   }
 
   private def writeData(out: RandomAccessFile, data: Array[Byte]): Int = {

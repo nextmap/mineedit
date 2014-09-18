@@ -21,6 +21,10 @@ class WorldWriterTest extends FlatSpec {
     world.setBlock(351, 4, 161, Block.BIRCH_WOOD_UP_DOWN)
   }
 
+  it should "create a new region if needed" in {
+    world.setBlock(-512, 4, 0, Block.BIRCH_WOOD_UP_DOWN)
+  }
+
   it should "save the example regions" in {
     val dir = new File("target/testout")
 
@@ -28,7 +32,7 @@ class WorldWriterTest extends FlatSpec {
     for (x <- 0 until 200)
       for (y <- 0 until 200) {
         val m = tiff.getPixel(x * 15, y * 15)
-        println(m)
+//        println(m)
         for (h <- 4 until m / 80) {
           world.setBlock(x - 50, h, y - 50, if (h > 40) Block.ICE else if (h > 30) Block.STONE else Block.DIRT)
         }
