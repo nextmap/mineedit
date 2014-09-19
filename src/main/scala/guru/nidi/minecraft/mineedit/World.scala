@@ -32,6 +32,12 @@ class World(initRegions: Array[Region]) {
     }).setBlock(floorMod(x, 512), y, floorMod(z, 512), b)
   }
 
+  def maxHeight(x: Int, z: Int): Int = {
+    var y = 255
+    while (y > 0 && getBlock(x, y, z) == Block.AIR) y -= 1
+    y
+  }
+
   override def equals(obj: scala.Any): Boolean =
     obj.isInstanceOf[World] && obj.asInstanceOf[World].regions == regions
 }

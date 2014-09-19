@@ -12,7 +12,7 @@ import scala.collection.JavaConversions.enumerationAsScalaIterator
 /**
  *
  */
-class AsterElevationProvider(basedir: File) extends ElevationProvider {
+class AsterElevationModel(basedir: File) extends Model[Int] {
   val models = CacheBuilder.newBuilder()
     .maximumSize(50)
     .build(new CacheLoader[(Int, Int), GeoTiff] {
@@ -20,15 +20,20 @@ class AsterElevationProvider(basedir: File) extends ElevationProvider {
       loadModel(key._1, key._2)
     }
   })
-  //    .Map[(Int, Int), GeoTiff]()
 
-  override def getElevation(x: Double, y: Double): Int = {
-    val bx = x.toInt
-    val by = y.toInt
+
+  override def getData(x: Double, y: Double, xl: Double, yl: Double): Int = {
+    (getElevation(x, y) + getElevation(x + xl, y) + getElevation(x, y + yl) + getElevation(x + xl, y + yl)) / 4
+  }
+
+  def getElevation(x: Double, y: Double): Int = {
+    val bx = intPart(x)
+    val by = intPart(y)
     val model = models.get((bx, by))
-    //    val model = models.getOrElse((bx, by), addModel(bx, by, loadModel(bx, by)))
     model.getPixel((3600 * (x - bx)).toInt, (3600 * (1 - y + by)).toInt)
   }
+
+  def intPart(v: Double) = (if (v < 0) v - 1 else v).toInt
 
   def addModel(x: Int, y: Int, model: GeoTiff): GeoTiff = {
     models.put((x, y), model)
@@ -36,7 +41,9 @@ class AsterElevationProvider(basedir: File) extends ElevationProvider {
   }
 
   def loadModel(x: Int, y: Int): GeoTiff = {
-    val name = "ASTGTM2_N%02dE%03d".format(y, x)
+    val lng = if (x < 0) "W" + "%03d".format(-x) else "E" + "%03d".format(x)
+    val lat = "N"
+    val name = "ASTGTM2_" + lat + "%02d".format(y) + lng
     val dir = new File(basedir, name)
     val zip = new File(basedir, name + ".zip")
     val file = new File(dir, name + "_dem.tif")
