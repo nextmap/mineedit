@@ -142,7 +142,7 @@ class Section(val root: CompoundTag) {
     ByteArrayTag("Blocks", new Array[Byte](4096)),
     ByteArrayTag("Data", new Array[Byte](2048)),
     ByteArrayTag("BlockLight", new Array[Byte](2048)),
-    ByteArrayTag("SkyLight", Array.fill[Byte](2048)(136.toByte))
+    ByteArrayTag("SkyLight", Array.fill[Byte](2048)(255.toByte))
   ))
 
   def blocks = root[ByteArrayTag]("Blocks")

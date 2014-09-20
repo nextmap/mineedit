@@ -66,7 +66,7 @@ class GshhgWaterModel(basedir: File, x0: Double, y0: Double, x1: Double, y1: Dou
 
   override def getData(x: Double, y: Double, xl: Double, yl: Double): Boolean = {
     val mx = Math.round((x - x0) / (x1 - x0) * this.xl).toInt
-    val my = Math.round((y - y0) / (y1 - y0) * this.yl).toInt - 1
+    val my = Math.round((y - y0) / (y1 - y0) * this.yl).toInt
     val b = image.getRGB(mx, my)
     (b & 0xff) == 0 || (b & 0xff) == 0xff
   }

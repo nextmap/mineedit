@@ -13,9 +13,10 @@ class WorldEditorTest extends FlatSpec {
   behavior of "ElevationEditor"
 
   it should "work" in {
-    val p0 = LatLng(43, 4)
-    val p1 = LatLng(54, 11)
-    val f = 150
+    val a = System.currentTimeMillis
+    val p0 = LatLng(46,6)
+    val p1 = LatLng(48,8)
+    val f = 2000
     val xl = ((p1._1 - p0._1) * f).toInt
     val yl = ((p1._2 - p0._2) * f).toInt
 
@@ -23,7 +24,7 @@ class WorldEditorTest extends FlatSpec {
       new WorldEditor(
         new InterpolatingCoordTransformer(p0, p1),
         new AsterElevationModel(new File("/Users/nidi/Downloads")),
-        new LinearIntTransformer(5, .005),
+        new LinearIntTransformer(5, .01),
         new ElevationDataApplyer),
       new WorldEditor(
         new InterpolatingCoordTransformer(p0, p1),
@@ -32,6 +33,8 @@ class WorldEditorTest extends FlatSpec {
         new WaterDataApplyer))
 
     WorldWriter.save(new File("target/testout"), world)
+    val b = System.currentTimeMillis
+    println((b - a) / 1000)
   }
 
 }

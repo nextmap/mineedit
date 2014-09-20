@@ -13,6 +13,8 @@ import scala.collection.JavaConversions.enumerationAsScalaIterator
  *
  */
 class AsterElevationModel(basedir: File) extends Model[Int] {
+  val asterFile = new AsterFile(new File("/Users/nidi/Downloads/aster/aster.ast"))
+
   val models = CacheBuilder.newBuilder()
     .maximumSize(50)
     .build(new CacheLoader[(Int, Int), GeoTiff] {
@@ -29,8 +31,7 @@ class AsterElevationModel(basedir: File) extends Model[Int] {
   def getElevation(x: Double, y: Double): Int = {
     val bx = intPart(x)
     val by = intPart(y)
-    val model = models.get((bx, by))
-    model.getPixel((3600 * (x - bx)).toInt, (3600 * (1 - y + by)).toInt)
+    asterFile.getPixel(by, bx,  (3600 * (x - bx)).toInt,(3600 * (1 - y + by)).toInt)
   }
 
   def intPart(v: Double) = (if (v < 0) v - 1 else v).toInt

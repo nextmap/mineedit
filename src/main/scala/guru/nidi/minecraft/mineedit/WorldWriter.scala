@@ -11,6 +11,7 @@ object WorldWriter {
   def save(dir: File, world: World): Unit = {
     val regionDir = new File(dir, "region")
 
+    regionDir.mkdirs()
     regionDir.listFiles()
       .filter(_.getName.endsWith(".mca"))
       .foreach(_.delete)
