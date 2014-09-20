@@ -8,6 +8,7 @@ import scala.collection.mutable
 /**
  *
  */
+//TODO replace with geotools
 object GeoTiffReader {
   def read(file: File): GeoTiff = {
     new GeoTiffReader(file).geoTiff

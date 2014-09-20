@@ -1,5 +1,6 @@
 package guru.nidi.minecraft.mineedit
 
+import java.awt.Color
 import java.io.File
 
 import org.geotools.data.FileDataStoreFinder
@@ -15,14 +16,15 @@ import org.opengis.feature.`type`.FeatureType
  */
 object ShapeViewer {
   def main(args: Array[String]) {
-//    val store = FileDataStoreFinder.getDataStore(new File("/Users/nidi/Downloads/gshhg-shp-2.3.2/GSHHS_shp/i/GSHHS_i_L1.shp"))
-          val store = FileDataStoreFinder.getDataStore(new File("/Users/nidi/Downloads/gshhg-shp-2.3.2/WDBII_shp/c/WDBII_river_c_L04.shp"))
+//    val store = FileDataStoreFinder.getDataStore(new File("/Users/nidi/Downloads/gshhg-shp-2.3.2/GSHHS_shp/f/GSHHS_f_L2.shp"))
+          val store = FileDataStoreFinder.getDataStore(new File("/Users/nidi/Downloads/gshhg-shp-2.3.2/WDBII_shp/c/WDBII_river_c_L02.shp"))
     val source = store.getFeatureSource
     val schema = source.getSchema
     val features = source.getFeatures()//boundingBoxFilter(schema, -20, 30, 20, 60))
     val map = new MapContent()
     map.setTitle("Quickstart")
-    val style = SLD.createSimpleStyle(schema)
+    val style = SLD.createPolygonStyle(Color.BLACK,Color.BLUE,1)
+//    val style = SLD.createSimpleStyle(schema)
     val layer = new FeatureLayer(features, style)
     map.addLayer(layer)
     JMapFrame.showMap(map)

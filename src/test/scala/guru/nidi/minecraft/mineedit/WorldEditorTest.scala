@@ -13,11 +13,13 @@ class WorldEditorTest extends FlatSpec {
   behavior of "ElevationEditor"
 
   it should "work" in {
-    val p0 = LatLng(40, 6)
-    val p1 = LatLng(60, 10)
-    //      new InterpolatingCoordTransformer(LatLng(35, -11), LatLng(63, 19), 5, 200),
+    val p0 = LatLng(43, 4)
+    val p1 = LatLng(54, 11)
+    val f = 150
+    val xl = ((p1._1 - p0._1) * f).toInt
+    val yl = ((p1._2 - p0._2) * f).toInt
 
-    WorldEditor.setElevation(world, 0, 0, 80, 400,
+    WorldEditor.setElevation(world, 0, 0, xl, yl,
       new WorldEditor(
         new InterpolatingCoordTransformer(p0, p1),
         new AsterElevationModel(new File("/Users/nidi/Downloads")),
@@ -25,7 +27,7 @@ class WorldEditorTest extends FlatSpec {
         new ElevationDataApplyer),
       new WorldEditor(
         new InterpolatingCoordTransformer(p0, p1),
-        new GshhgWaterModel(new File("/Users/nidi/Downloads/gshhg-shp-2.3.2"), p0, p1),
+        new GshhgWaterModel(new File("/Users/nidi/Downloads/gshhg-shp-2.3.2"), p0, p1, xl, yl),
         new NoopTransformer[Boolean],
         new WaterDataApplyer))
 
