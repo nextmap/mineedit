@@ -18,8 +18,9 @@ class WorldEditorTest extends FlatSpec {
     val p1 = LatLng(48, 8)
     val f = 100
     val ef = Math.cos(p0.lat * Math.PI / 180) * 40000000d / 360
-    val xl = ((p1.lng - p0.lng) * f).toInt
-    val yl = ((p1.lat - p0.lat) * f).toInt
+    val size = p1 - p0
+    val xl = (size.lng * f).toInt
+    val yl = (size.lat * f).toInt
 
     WorldEditor.setElevation(world, Xz(0, 0), xl, yl,
       new WorldEditor(

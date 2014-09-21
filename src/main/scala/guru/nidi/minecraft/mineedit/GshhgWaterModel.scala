@@ -15,6 +15,8 @@ import org.geotools.styling.{SLD, Style}
  *
  */
 class GshhgWaterModel(basedir: File, r0: LatLng, r1: LatLng, xl: Int, yl: Int) extends Model[Boolean] {
+  val size = r1 - r0
+
   private val image = {
     def store(file: String) = FileDataStoreFinder.getDataStore(new File(basedir, file))
 
@@ -42,8 +44,8 @@ class GshhgWaterModel(basedir: File, r0: LatLng, r1: LatLng, xl: Int, yl: Int) e
     addLayer(map, river4Store, SLD.createLineStyle(Color.WHITE, 1f))
     val image = new BufferedImage(xl, yl, BufferedImage.TYPE_BYTE_GRAY)
     val g = image.createGraphics
-    val sx = xl / (r1.lng - r0.lng)
-    val sy = yl / (r1.lat - r0.lat)
+    val sx = xl / size.lng
+    val sy = yl / size.lat
     renderer.paint(g, new Rectangle(0, 0, xl, yl),
       new ReferencedEnvelope(r0.lng, r1.lng, r0.lat, r1.lat, targetCRS),
       new AffineTransform(sx, 0, 0, sy, -r0.lng * sx, -r0.lat * sy))
@@ -62,8 +64,9 @@ class GshhgWaterModel(basedir: File, r0: LatLng, r1: LatLng, xl: Int, yl: Int) e
   //  Thread.sleep(15000)
 
   override def getData(p0: LatLng, p1: LatLng): Boolean = {
-    val mx = Math.round((p0.lng - r0.lng) / (r1.lng - r0.lng) * this.xl).toInt
-    val my = Math.round((p0.lat - r0.lat) / (r1.lat - r0.lat) * this.yl).toInt
+    val pos = p0 - r0
+    val mx = Math.round(pos.lng / size.lng * this.xl).toInt
+    val my = Math.round(pos.lat / size.lat * this.yl).toInt
     val b = image.getRGB(mx, my)
     (b & 0xff) == 0 || (b & 0xff) == 0xff
   }
