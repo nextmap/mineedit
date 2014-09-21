@@ -24,14 +24,14 @@ class AsterElevationModel(basedir: File) extends Model[Int] {
   })
 
 
-  override def getData(x: Double, y: Double, xl: Double, yl: Double): Int = {
-    (getElevation(x, y) + getElevation(x + xl, y) + getElevation(x, y + yl) + getElevation(x + xl, y + yl)) / 4
+  override def getData(p0: LatLng, p1: LatLng): Int = {
+    (getElevation(p0.lng, p0.lat) + getElevation(p1.lng, p0.lat) + getElevation(p0.lng, p1.lat) + getElevation(p1.lng, p1.lat)) / 4
   }
 
   def getElevation(x: Double, y: Double): Int = {
     val bx = intPart(x)
     val by = intPart(y)
-    asterFile.getPixel(by, bx,  (3600 * (x - bx)).toInt,(3600 * (1 - y + by)).toInt)
+    asterFile.getPixel(by, bx, (3600 * (x - bx)).toInt, (3600 * (1 - y + by)).toInt)
   }
 
   def intPart(v: Double) = (if (v < 0) v - 1 else v).toInt
