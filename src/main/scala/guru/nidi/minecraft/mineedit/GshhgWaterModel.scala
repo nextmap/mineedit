@@ -14,6 +14,7 @@ import org.geotools.styling.{SLD, Style}
 /**
  *
  */
+//TODO apply projection correctly
 class GshhgWaterModel(basedir: File, r0: LatLng, r1: LatLng, xl: Int, yl: Int) extends Model[Boolean] {
   val size = r1 - r0
 
