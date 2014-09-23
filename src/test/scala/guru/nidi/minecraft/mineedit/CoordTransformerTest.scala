@@ -23,7 +23,7 @@ class CoordTransformerTest extends FlatSpec {
     val size = p1 - p0
     val xl = Math.round(size.lng * f).toInt
 
-    val ct = new InterpolatingCoordTransformer(Xz(0, 0), xl, p0, p1)
+    val ct = new LinearCoordTransformer(Xz(0, 0), xl, p0, p1)
     ct.apply(world,
       new AsterElevationModel(new File("/Users/nidi/Downloads")),
       new ElevationDataApplyer(new LinearIntTransformer(5, f / ef)))

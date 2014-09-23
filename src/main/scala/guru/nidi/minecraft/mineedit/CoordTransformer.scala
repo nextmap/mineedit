@@ -9,7 +9,7 @@ trait CoordTransformer {
   def mine2model(x: Int, z: Int): LatLng
 }
 
-class InterpolatingCoordTransformer(minePos: Xz, mineXlen: Int, model0: LatLng, model1: LatLng) extends CoordTransformer {
+class LinearCoordTransformer(minePos: Xz, mineXlen: Int, model0: LatLng, model1: LatLng) extends CoordTransformer {
   val modelSize = model1 - model0
   val mineZlen = (mineXlen / modelSize.lng * modelSize.lat).toInt
 
