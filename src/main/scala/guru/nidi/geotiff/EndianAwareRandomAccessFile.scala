@@ -1,26 +1,24 @@
 package guru.nidi.geotiff
 
-import java.io.{File, RandomAccessFile}
 import java.nio.charset.Charset
 
 /**
  *
  */
-class EndianAwareRandomAccessFile(file: File, mode: String) {
-  val raf = new RandomAccessFile(file, mode)
+class EndianAwareRandomAccessFile(file: FileLike) {
   var bigEndian = true
 
   def setBigEndian() = bigEndian = true
 
   def setLittleEndian() = bigEndian = false
 
-  def close() = raf.close()
+  def close() = file.close()
 
   def seek(pos: Long) = {
-    raf.seek(pos)
+    file.seek(pos)
   }
 
-  def getPos: Long = raf.getFilePointer
+  def getPos: Long = file.getPos
 
   def doAt[T](pos: Long)(action: => T): T = {
     val oldPos = getPos
@@ -32,12 +30,12 @@ class EndianAwareRandomAccessFile(file: File, mode: String) {
 
   def read(len: Int): Array[Byte] = {
     val v = new Array[Byte](len)
-    raf.read(v)
+    file.read(v)
     v
   }
 
   def readShort(): Short = {
-    val v = raf.readShort()
+    val v = file.readShort()
     if (bigEndian) v
     else (((v >> 8) & 0xff) + (v << 8)).toShort
   }
@@ -49,13 +47,13 @@ class EndianAwareRandomAccessFile(file: File, mode: String) {
   }
 
   def readInt(): Int = {
-    val v = raf.readInt()
+    val v = file.readInt()
     if (bigEndian) v
     else ((v >> 24) & 0xff) + ((v >> 8) & 0xff00) + ((v << 8) & 0xff0000) + (v << 24)
   }
 
   def readLong(): Long = {
-    val v = raf.readLong()
+    val v = file.readLong()
     if (bigEndian) v
     else ((v >> 56) & 0xff) + ((v >> 40) & 0xff00) + ((v >> 24) & 0xff0000) + ((v >> 8) & 0xff000000) +
       ((v << 8) & 0xff00000000L) + ((v << 24) & 0xff0000000000L) + ((v << 40) & 0xff000000000000L) + (v << 56)
@@ -68,7 +66,7 @@ class EndianAwareRandomAccessFile(file: File, mode: String) {
 
   def readAscii(len: Int): String = {
     val buf = new Array[Byte](len)
-    raf.read(buf)
+    file.read(buf)
     new String(buf, Charset.forName("us-ascii"))
   }
 }

@@ -1,6 +1,6 @@
 package guru.nidi.geotiff
 
-import java.io.File
+import java.io.{File, FileInputStream, InputStream}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -11,12 +11,20 @@ import scala.collection.mutable
 //TODO replace with geotools
 object GeoTiffReader {
   def read(file: File): GeoTiff = {
-    new GeoTiffReader(file).geoTiff
+    read(new FileInputStream(file), file.length().toInt)
+  }
+
+  def read(input: InputStream, size: Int): GeoTiff = {
+    val res = new GeoTiffReader(input, size).geoTiff
+    res
   }
 }
 
-private class GeoTiffReader(file: File) {
-  val in = new EndianAwareRandomAccessFile(file, "r")
+private class GeoTiffReader(input: InputStream, size: Int) {
+  //  val in = new EndianAwareRandomAccessFile(new RandomAccessFileLike(new RandomAccessFile(file, "r")))
+  val a = System.currentTimeMillis()
+  val in = new EndianAwareRandomAccessFile(new BufferedFileLike(input, size))
+  val b = System.currentTimeMillis()
 
   var width = 0
   var height = 0
@@ -50,6 +58,8 @@ private class GeoTiffReader(file: File) {
       xResolution, yResolution, resolutionUnit,
       modelPixelScale, modelTiepoints, geoKeyDirectory)
   }
+  val c = System.currentTimeMillis()
+  println("tiff load " + (b - a) + ";" + (c - b))
 
   @tailrec
   private def readDirectory(): Unit = {
@@ -113,7 +123,6 @@ private class GeoTiffReader(file: File) {
       }
     }
 
-
     tag match {
       case 256 => width = readScalar()
       case 257 => height = readScalar()
@@ -150,10 +159,19 @@ private class GeoTiffReader(file: File) {
     }
   }
 
-  def getPixel(x: Int, y: Int): Int = {
+  def getPixel(x: Int, y: Int): Short = {
     val s = y / rowsPerStrip
     val pos = (x + (y % rowsPerStrip) * width) * bytesPerPixel
     in.readShort(strips(s), pos)
   }
 
+  def doWithPixels(y: Int, work: (Int, Short) => Unit) = {
+    val s = y / rowsPerStrip
+    val pos = (y % rowsPerStrip) * width * bytesPerPixel
+    var x = 0
+    while (x < width) {
+      work(x, in.readShort(strips(s), pos + x * bytesPerPixel))
+      x += 1
+    }
+  }
 }

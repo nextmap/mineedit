@@ -9,7 +9,9 @@ class GeoTiff(reader: GeoTiffReader,
               val xResolution: Double, val yResolution: Double, val resolutionUnit: Int,
               val modelPixelScale: Array[Double],
               val modelTiepoints: Array[Double],
-              val geoKeyDirectory: Array[Int]) {
+              val geoKeyDirectory: Array[Int]) extends PixelSource {
 
-  def getPixel(x: Int, y: Int): Int = reader.getPixel(x, y)
+  override def getPixel(x: Int, y: Int): Short = reader.getPixel(x, y)
+
+  override def doWithPixels(y: Int, work: (Int, Short) => Unit): Unit = reader.doWithPixels(y, work)
 }

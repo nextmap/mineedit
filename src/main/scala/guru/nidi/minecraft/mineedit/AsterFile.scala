@@ -1,42 +1,49 @@
 package guru.nidi.minecraft.mineedit
 
 import java.io.{File, RandomAccessFile}
-import java.nio.file.Files
-import java.util.zip.ZipFile
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
 
-import guru.nidi.geotiff.{GeoTiff, GeoTiffReader}
-
-import scala.collection.JavaConversions.enumerationAsScalaIterator
+import com.google.common.cache._
+import guru.nidi.geotiff.{PixelSource, PixelSourceProvider}
 
 
 /**
  *
  */
-class AsterFile(basedir: File) {
-
-  val startTime = System.currentTimeMillis
-  val file = new File(basedir, "aster.ast")
+class AsterFile(basedir: File, val resolution: Int, sourceProvider: PixelSourceProvider, useCache: Boolean,minTime:Long) {
+  val file = new File(basedir, s"aster-$resolution.ast")
   val raf = new RandomAccessFile(file, "rw")
+  val slotsSize = 360 * 180 * 8
+  val pageSize = 2 * (resolution + 1) * (resolution + 1)
+
+  val cache: LoadingCache[java.lang.Integer, ByteBuffer] = CacheBuilder.newBuilder()
+    .maximumSize(300)
+    .removalListener(new RemovalListener[java.lang.Integer, ByteBuffer] {
+    override def onRemoval(notification: RemovalNotification[Integer, ByteBuffer]): Unit =
+      println("removed " + notification.getKey)
+  })
+    .build(new CacheLoader[java.lang.Integer, ByteBuffer] {
+    def load(key: java.lang.Integer): ByteBuffer = {
+      //      println(slotsSize + key.toLong * pageSize)
+      println("loaded " + key)
+      //      val res = new Array[Byte](pageSize)
+      //      raf.seek(slotsSize + key.toLong * pageSize)
+      //      raf.read(res)
+      val res = raf.getChannel.map(FileChannel.MapMode.READ_ONLY, slotsSize + key.toLong * pageSize, pageSize)
+      res
+    }
+  })
 
   object Slots {
-    private val slots = new Array[Byte](360 * 180 * 8)
+    private val slots = new Array[Byte](slotsSize)
     if (file.length() > 0) {
       raf.read(slots)
     } else {
       raf.write(slots)
     }
 
-    private def slotOf(name: String): Int = {
-      val rawLng = Integer.parseInt(name.substring(12, 15))
-      val lng = if (name.charAt(11) == 'E') rawLng else -rawLng
-      val rawLat = Integer.parseInt(name.substring(9, 11))
-      val lat = if (name.charAt(8) == 'N') rawLat else -rawLat
-      slotOf(lat, lng)
-    }
-
-    private def slotOf(lat: Int, lng: Int): Int = ((180 + lng) * 180 + 90 + lat) * 8
-
-    def getSlot(name: String): Slot = getSlot(slotOf(name))
+    private def slotOf(lat: Int, lng: Int): Int = ((lng + 180) * 180 + 90 + lat) * 8
 
     def getSlot(lat: Int, lng: Int): Slot = getSlot(slotOf(lat, lng))
 
@@ -47,7 +54,7 @@ class AsterFile(basedir: File) {
       Slot((getInt(p).toLong << 32) + (getInt(p + 4) & 0xFFFFFFFFL))
     }
 
-    def setSlot(name: String, slot: Slot): slot.type = setSlot(slotOf(name), slot)
+    def setSlot(lat: Int, lng: Int, slot: Slot): slot.type = setSlot(slotOf(lat, lng), slot)
 
     private def setSlot(p: Int, slot: Slot): slot.type = {
       val value = slot.rawValue
@@ -59,6 +66,7 @@ class AsterFile(basedir: File) {
       slots(p + 5) = (value >>> 16).toByte
       slots(p + 6) = (value >>> 8).toByte
       slots(p + 7) = (value >>> 0).toByte
+      println("write slot " + p)
       raf.seek(p)
       raf.write(slots, p, 8)
       slot
@@ -85,71 +93,135 @@ class AsterFile(basedir: File) {
     def posOrElse(elsePos: => Long): PosSlot = new PosSlot(elsePos)
   }
 
-  def importTiffs(dir: File) = {
-    dir.listFiles().foreach(f => if (f.getName.startsWith("ASTGTM2_") && f.isDirectory) {
-      importTiff(f)
-    })
-  }
-
-  def importTiff(f: File): PosSlot = {
-    val newSlot = getSlot(f.getName).posOrElse(raf.length())
-    setData(newSlot, GeoTiffReader.read(f))
-    f.delete()
-    f.getParentFile.delete()
-    setSlot(f.getName, newSlot)
+  def importTileTimed(lat: Int, lng: Int): Slot = {
+    val a = System.currentTimeMillis
+    val res = importTile(lat, lng)
+    val b = System.currentTimeMillis
+    if (b - a > 3)
+      println("load " + (b - a))
+    res
   }
 
   def importTile(lat: Int, lng: Int): Slot = {
-    val lngStr = if (lng < 0) "W" + "%03d".format(-lng) else "E" + "%03d".format(lng)
-    val latStr = "N"
-    val name = "ASTGTM2_" + latStr + "%02d".format(lat) + lngStr
-    val dir = new File(basedir, name)
-    val zip = new File(basedir, name + ".zip")
-    val file = new File(dir, name + "_dem.tif")
-    val qa = new File(dir, name + "_num.tif")
-    if (!dir.exists() && zip.exists()) unzip(zip, zip.getParentFile)
-    if (qa.exists()) qa.delete()
-    if (file.exists()) importTiff(file)
-    else setSlot(file.getName, new TimestampSlot(System.currentTimeMillis))
-  }
-
-  def unzip(zip: File, target: File) = {
-    val zipFile = new ZipFile(zip)
-    for (entry <- zipFile.entries()) {
-      val destFile = new File(target, entry.getName)
-      destFile.getParentFile.mkdirs
-      if (!entry.isDirectory) {
-        Files.copy(zipFile.getInputStream(entry), destFile.toPath)
-      }
+    sourceProvider.sourceFor(lat, lng) match {
+      case None => setSlot(lat, lng, new TimestampSlot(System.currentTimeMillis))
+      case Some(sp) => doImportTile(lat, lng, sp)
     }
   }
 
-  def setData(p: PosSlot, value: GeoTiff) = {
-    val data = new Array[Byte](2 * 3601 * 3601)
-    for (x <- 0 until 3601) {
-      for (y <- 0 until 3601) {
-        val pixel = value.getPixel(x, y)
-        data(dataPos(x, y)) = (pixel >> 8).toByte
-        data(dataPos(x, y) + 1) = pixel.toByte
-      }
-    }
-    raf.seek(p.value)
-    raf.write(data)
+  def doImportTile(lat: Int, lng: Int, source: PixelSource): PosSlot = {
+    val newSlot = getSlot(lat, lng).posOrElse(raf.length())
+    val b = System.currentTimeMillis
+    setData(newSlot, source)
+    val c = System.currentTimeMillis
+    val res = setSlot(lat, lng, newSlot)
+    println("import tile " + (c - b))
+    res
   }
 
-  def dataPos(x: Int, y: Int) = (x + 3601 * y) * 2
+  def setData(p: PosSlot, value: PixelSource) = {
+    val data = raf.getChannel.map(FileChannel.MapMode.READ_WRITE, p.value, pageSize)
+    val a = System.currentTimeMillis
+    //        for (x <- 0 to resolution) {
+    //      for (y <- 0 to resolution) {
+    //        val pixel = value.getPixel(x, y)
+    //        data.put(dataPos(x, y), (pixel >> 8).toByte)
+    //        data.put(dataPos(x, y) + 1, pixel.toByte)
+    //      }
+    //    }
+
+    var y = 0
+    while (y < resolution + 1) {
+      value.doWithPixels(y, (x, pixel) => {
+        val pos = dataPos(x, y)
+        data.putShort(pos, pixel)
+      })
+      y += 1
+    }
+
+    val b = System.currentTimeMillis
+
+
+    //    println("write map " + p.value)
+    //    raf.seek(p.value)
+    //    raf.getChannel.write()
+    //    raf.write(data)
+    //    val data = new Array[Byte](pageSize)
+    //    for (x <- 0 to resolution) {
+    //      for (y <- 0 to resolution) {
+    //        val pixel = value.getPixel(x, y)
+    //        data(dataPos(x, y)) = (pixel >> 8).toByte
+    //        data(dataPos(x, y) + 1) = pixel.toByte
+    //      }
+    //    }
+    //    val b = System.currentTimeMillis
+    //    //    println("write map " + p.value)
+    //    raf.seek(p.value)
+    //    raf.write(data)
+    val c = System.currentTimeMillis
+
+    println("set data " + (b - a) + "; " + (c - b))
+  }
+
+  def dataPos(x: Int, y: Int) = (x + (resolution + 1) * y) * 2
+
+  def getPixel(p: LatLng): Short = getPixel(p.lat, p.lng)
+
+  def getPixel(lat: Double, lng: Double): Short = {
+    def intPart(v: Double) = Math.floor(v).toInt
+    val slat = intPart(lat)
+    val slng = intPart(lng)
+    getPixel(slat, slng, (resolution * (lng - slng)).toInt, (resolution * (1 - lat + slat)).toInt)
+  }
 
   def getPixel(lat: Int, lng: Int, x: Int, y: Int): Short = {
     def eval(slot: Slot): Short = slot match {
       case s: PosSlot =>
-        raf.seek(s.value + dataPos(x, y))
-        raf.readShort()
-      case s: TimestampSlot =>
-        if (s.value < startTime) eval(importTile(lat, lng)) else 0
-    }
+        if (useCache) {
+          val pageIndex = ((s.value - slotsSize) / pageSize).toInt
+          val page = cache.get(pageIndex)
+          page.getShort(dataPos(x, y))
 
+          //                  ((page(dataPos(x, y)) << 8) + page(dataPos(x, y))).toShort
+          //                  println("read " + pageIndex + "," + dataPos(x, y))
+        } else {
+          raf.seek(s.value + dataPos(x, y))
+          raf.readShort()
+        }
+      case s: TimestampSlot =>
+        if (s.value < minTime) eval(importTileTimed(lat, lng)) else -1000
+    }
     eval(getSlot(lat, lng))
   }
 
+  def getTile(lat: Int, lng: Int): Option[Tile] = {
+    getSlot(lat, lng) match {
+      case s: PosSlot =>
+        val a = System.currentTimeMillis
+        val pageIndex = ((s.value - slotsSize) / pageSize).toInt
+        val buf = raf.getChannel.map(FileChannel.MapMode.READ_ONLY, slotsSize + pageIndex.toLong * pageSize, pageSize)
+        val b = System.currentTimeMillis
+        println("getTile " + (b - a))
+        Some(new Tile(buf, resolution))
+      case s: TimestampSlot => None
+    }
+  }
+
   def close() = raf.close()
+}
+
+class Tile(buffer: ByteBuffer, val resolution: Int) {
+  def dataPos(x: Int, y: Int) = (x + (resolution + 1) * y) * 2
+
+  def getPixel(x: Int, y: Int): Short = buffer.getShort(dataPos(x, y))
+
+  def doWithPixels(y: Int, scale: Int, work: (Int, Short) => Unit): Unit = {
+    var x = 0
+    var pos = dataPos(x, y)
+    while (x < resolution / scale + 1) {
+      work(x, buffer.getShort(pos))
+      x += scale
+      pos += 2 * scale
+    }
+  }
 }
